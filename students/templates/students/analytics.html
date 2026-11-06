@@ -1,0 +1,249 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Interactive Analytics Dashboard - StudentMS Pro{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <div class="mb-2">
+            <a href="{% url 'student_list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Admin Console
+            </a>
+        </div>
+        <h4 class="fw-bold mb-1 text-dark">
+            <i class="bi bi-graph-up-arrow text-primary me-2"></i>Institutional Analytics &amp; Academic Intelligence
+        </h4>
+        <p class="text-muted small mb-0">Real-time aggregate distributions across departments, student attendance, and academic grades</p>
+    </div>
+</div>
+
+<!-- KPI Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card bg-white shadow-sm border-0 p-3 card-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Total Students</span>
+                    <h3 class="fw-bold mb-0 text-dark">{{ analytics.total_students }}</h3>
+                    <small class="text-muted">Enrolled in courses</small>
+                </div>
+                <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle">
+                    <i class="bi bi-people-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <div class="card bg-white shadow-sm border-0 p-3 card-stat" style="border-left-color: #10b981 !important;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Passing Rate</span>
+                    <h3 class="fw-bold mb-0 text-success">{{ analytics.pass_rate }}%</h3>
+                    <small class="text-muted">{{ analytics.passed_count }} passed &bull; {{ analytics.failed_count }} failed</small>
+                </div>
+                <div class="p-3 bg-success bg-opacity-10 text-success rounded-circle">
+                    <i class="bi bi-award-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <div class="card bg-white shadow-sm border-0 p-3 card-stat" style="border-left-color: #6366f1 !important;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Average Attendance</span>
+                    <h3 class="fw-bold mb-0 text-primary">{{ analytics.overall_attendance_pct }}%</h3>
+                    <small class="text-muted">Benchmark: &ge;75%</small>
+                </div>
+                <div class="p-3 bg-opacity-10 rounded-circle" style="background-color: #e0e7ff; color: #4338ca;">
+                    <i class="bi bi-calendar2-check-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <div class="card bg-white shadow-sm border-0 p-3 card-stat" style="border-left-color: #f59e0b !important;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Total Evaluated</span>
+                    <h3 class="fw-bold mb-0 text-warning">{{ analytics.total_grades }}</h3>
+                    <small class="text-muted">Subject exam grades recorded</small>
+                </div>
+                <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-circle">
+                    <i class="bi bi-patch-check-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Enrollment by Department -->
+    <div class="col-lg-6">
+        <div class="card bg-white shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-pie-chart-fill text-primary me-2"></i>Total Students Enrolled by Department
+                </h6>
+                <span class="badge bg-light text-muted border">Distribution</span>
+            </div>
+            <div class="card-body p-4" style="position: relative; height: 320px;">
+                <canvas id="analyticsDeptChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Department-wide Attendance Averages -->
+    <div class="col-lg-6">
+        <div class="card bg-white shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-bar-chart-fill text-success me-2"></i>Department-Wide Attendance Averages
+                </h6>
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Target: 75%</span>
+            </div>
+            <div class="card-body p-4" style="position: relative; height: 320px;">
+                <canvas id="analyticsAttChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 3: Grade Distributions & Pass/Fail -->
+    <div class="col-lg-8">
+        <div class="card bg-white shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-bar-chart-steps text-info me-2"></i>Academic Grade Distribution (A+ to F)
+                </h6>
+                <span class="badge bg-light text-muted border">Letter Grades</span>
+            </div>
+            <div class="card-body p-4" style="position: relative; height: 320px;">
+                <canvas id="analyticsGradeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 4: Gender Distribution -->
+    <div class="col-lg-4">
+        <div class="card bg-white shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-gender-ambiguous text-danger me-2"></i>Gender Diversity Ratio
+                </h6>
+                <span class="badge bg-light text-muted border">Demographics</span>
+            </div>
+            <div class="card-body p-4 d-flex align-items-center justify-content-center" style="position: relative; height: 320px;">
+                <canvas id="analyticsGenderChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // 1. Department Enrollment Chart
+    const deptLabels = {{ analytics.dept_labels_json|safe }};
+    const deptCounts = {{ analytics.dept_counts_json|safe }};
+    new Chart(document.getElementById('analyticsDeptChart'), {
+        type: 'doughnut',
+        data: {
+            labels: deptLabels,
+            datasets: [{
+                data: deptCounts,
+                backgroundColor: ['#2563eb', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+
+    // 2. Department Attendance Chart
+    const attLabels = {{ analytics.dept_attendance_labels_json|safe }};
+    const attValues = {{ analytics.dept_attendance_values_json|safe }};
+    new Chart(document.getElementById('analyticsAttChart'), {
+        type: 'bar',
+        data: {
+            labels: attLabels,
+            datasets: [{
+                label: 'Attendance %',
+                data: attValues,
+                backgroundColor: attValues.map(v => v >= 75 ? '#10b981' : '#ef4444'),
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // 3. Grade Distribution Chart
+    const gradeLabels = {{ analytics.grade_labels_json|safe }};
+    const gradeCounts = {{ analytics.grade_counts_json|safe }};
+    new Chart(document.getElementById('analyticsGradeChart'), {
+        type: 'bar',
+        data: {
+            labels: gradeLabels,
+            datasets: [{
+                label: 'Students Graded',
+                data: gradeCounts,
+                backgroundColor: ['#10b981', '#06b6d4', '#3b82f6', '#f59e0b', '#f97316', '#ef4444'],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // 4. Gender Demographics Chart
+    const genderLabels = {{ analytics.gender_labels_json|safe }};
+    const genderCounts = {{ analytics.gender_counts_json|safe }};
+    new Chart(document.getElementById('analyticsGenderChart'), {
+        type: 'pie',
+        data: {
+            labels: genderLabels,
+            datasets: [{
+                data: genderCounts,
+                backgroundColor: ['#0284c7', '#ec4899', '#94a3b8'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

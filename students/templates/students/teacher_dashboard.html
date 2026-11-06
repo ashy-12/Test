@@ -1,0 +1,239 @@
+{% extends 'students/base.html' %}
+
+{% block title %}Teacher Dashboard - StudentMS Pro{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1 text-dark">
+            <i class="bi bi-journal-check text-primary me-2"></i>Teacher Academic Portal
+        </h4>
+        <p class="text-muted small mb-0">Manage marks, grades, and attendance for your assigned subjects</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-light text-dark border px-3 py-2">
+            <i class="bi bi-person-workspace text-primary me-1"></i> Instructor: <strong>{{ user.get_full_name|default:user.username }}</strong>
+        </span>
+    </div>
+</div>
+
+<!-- Subjects Selector Bar -->
+<div class="card bg-white shadow-sm border-0 mb-4">
+    <div class="card-body p-3">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-semibold text-secondary small text-uppercase">Assigned Subject:</span>
+                <div class="btn-group" role="group">
+                    {% for subj in subjects %}
+                        <a href="?subject_id={{ subj.id }}" class="btn btn-sm {% if active_subject.id == subj.id %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            {{ subj.code }} - {{ subj.name }}
+                        </a>
+                    {% empty %}
+                        <span class="text-muted small">No subjects assigned currently.</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if active_subject %}
+                <div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                        Department: <strong>{{ active_subject.department }}</strong> &bull; {{ enrolled_students|length }} Enrolled Students
+                    </span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if active_subject %}
+    <div class="row g-4">
+        <!-- Left Column: Student Grades Management -->
+        <div class="col-lg-7">
+            <div class="card bg-white shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-award text-primary me-2"></i>Marks &amp; Grades Evaluation
+                    </h5>
+                    <span class="badge bg-light text-muted border">{{ active_subject.code }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if enrolled_students %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Student</th>
+                                        <th>Roll No</th>
+                                        <th>Marks / Max</th>
+                                        <th>Grade</th>
+                                        <th>Remarks</th>
+                                        <th class="text-end pe-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for st in enrolled_students %}
+                                        <tr>
+                                            <td class="ps-3">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle me-2" style="width: 34px; height: 34px; font-size: 0.85rem;">
+                                                        {{ st.first_name|first }}{{ st.last_name|first }}
+                                                    </div>
+                                                    <div>
+                                                        <span class="fw-semibold text-dark">{{ st.full_name }}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><small class="badge bg-light text-dark border">{{ st.roll_number }}</small></td>
+                                            <td>
+                                                {% with grade=st.grades.all|dictsort:"subject_id" %}
+                                                    {% for g in st.grades.all %}
+                                                        {% if g.subject_id == active_subject.id %}
+                                                            <span class="fw-bold text-dark">{{ g.marks_obtained }}</span> / {{ g.max_marks }}
+                                                        {% endif %}
+                                                    {% empty %}
+                                                        <span class="text-muted small">&mdash;</span>
+                                                    {% endfor %}
+                                                {% endwith %}
+                                            </td>
+                                            <td>
+                                                {% for g in st.grades.all %}
+                                                    {% if g.subject_id == active_subject.id %}
+                                                        <span class="badge {% if g.grade_letter == 'A+' or g.grade_letter == 'A' %}bg-success{% elif g.grade_letter == 'F' %}bg-danger{% else %}bg-primary{% endif %}">
+                                                            {{ g.grade_letter }}
+                                                        </span>
+                                                    {% endif %}
+                                                {% empty %}
+                                                    <span class="badge bg-secondary-subtle text-secondary">Pending</span>
+                                                {% endfor %}
+                                            </td>
+                                            <td class="small text-muted">
+                                                {% for g in st.grades.all %}
+                                                    {% if g.subject_id == active_subject.id %}
+                                                        {{ g.remarks|default:"&mdash;" }}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                            <td class="text-end pe-3">
+                                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#gradeModal{{ st.id }}">
+                                                    <i class="bi bi-pencil-square me-1"></i> Grade
+                                                </button>
+
+                                                <!-- Grade Modal for Student -->
+                                                <div class="modal fade text-start" id="gradeModal{{ st.id }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content border-0 shadow">
+                                                            <div class="modal-header bg-primary text-white">
+                                                                <h6 class="modal-title fw-bold">
+                                                                    Enter Marks: {{ st.full_name }} ({{ active_subject.code }})
+                                                                </h6>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <form method="post" action="{% url 'teacher_save_grade' %}">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="student_id" value="{{ st.id }}">
+                                                                <input type="hidden" name="subject_id" value="{{ active_subject.id }}">
+                                                                <div class="modal-body p-4">
+                                                                    <div class="row g-3">
+                                                                        <div class="col-6">
+                                                                            <label class="form-label fw-semibold small">Marks Obtained</label>
+                                                                            <input type="number" step="0.5" name="marks_obtained" class="form-control" required placeholder="e.g. 85.5">
+                                                                        </div>
+                                                                        <div class="col-6">
+                                                                            <label class="form-label fw-semibold small">Max Marks</label>
+                                                                            <input type="number" step="1.0" name="max_marks" class="form-control" value="100" required>
+                                                                        </div>
+                                                                        <div class="col-12">
+                                                                            <label class="form-label fw-semibold small">Teacher Remarks</label>
+                                                                            <input type="text" name="remarks" class="form-control" placeholder="e.g. Strong conceptual grasp, excellent viva">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer bg-light">
+                                                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold">Save Grade</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-people fs-1 text-muted"></i>
+                            <p class="mt-2 mb-0">No students found in {{ active_subject.department }}.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Daily Attendance Register -->
+        <div class="col-lg-5">
+            <div class="card bg-white shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-calendar2-check text-success me-2"></i>Mark Attendance
+                    </h5>
+                    <small class="text-muted">{{ active_subject.name }}</small>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'teacher_save_attendance' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="subject_id" value="{{ active_subject.id }}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Attendance Date</label>
+                            <input type="date" name="date" class="form-control form-control-sm" value="{{ today|date:'Y-m-d' }}" required>
+                        </div>
+
+                        <div class="table-responsive border rounded mb-3" style="max-height: 380px; overflow-y: auto;">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="ps-2">Student</th>
+                                        <th class="text-center">Present</th>
+                                        <th class="text-center">Late</th>
+                                        <th class="text-center">Absent</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for st in enrolled_students %}
+                                        <tr>
+                                            <td class="ps-2 py-2">
+                                                <div class="fw-semibold small text-dark">{{ st.full_name }}</div>
+                                                <small class="text-muted">{{ st.roll_number }}</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <input class="form-check-input" type="radio" name="status_{{ st.id }}" value="Present" checked>
+                                            </td>
+                                            <td class="text-center">
+                                                <input class="form-check-input" type="radio" name="status_{{ st.id }}" value="Late">
+                                            </td>
+                                            <td class="text-center">
+                                                <input class="form-check-input" type="radio" name="status_{{ st.id }}" value="Absent">
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr><td colspan="4" class="text-center py-3 text-muted">No students enrolled.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 fw-semibold" {% if not enrolled_students %}disabled{% endif %}>
+                            <i class="bi bi-check-circle-fill me-1"></i> Submit Attendance Register
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

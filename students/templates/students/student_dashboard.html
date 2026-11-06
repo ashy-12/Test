@@ -1,0 +1,186 @@
+{% extends 'students/base.html' %}
+
+{% block title %}My Academic Dashboard - StudentMS Pro{% endblock %}
+
+{% block content %}
+{% if student %}
+    <!-- Student Header & Export Button -->
+    <div class="card bg-white shadow-sm border-0 mb-4 overflow-hidden">
+        <div class="p-4 bg-primary text-white">
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-circle fs-2 text-primary bg-white shadow-sm" style="width: 72px; height: 72px;">
+                        {{ student.first_name|first }}{{ student.last_name|first }}
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-1">{{ student.full_name }}</h3>
+                        <p class="mb-0 opacity-75">
+                            <span class="badge bg-white text-primary me-2">Roll No: {{ student.roll_number }}</span>
+                            <span>{{ student.course }}</span>
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <!-- Prominent PDF Download Button -->
+                    <a href="{% url 'export_report_card_pdf' student.pk %}" class="btn btn-warning text-dark fw-bold px-4 py-2 shadow-sm">
+                        <i class="bi bi-file-earmark-pdf-fill me-2 fs-5"></i> Download Official Transcript / Report Card
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4 bg-light">
+            <div class="row g-3 text-center">
+                <div class="col-sm-6 col-md-3">
+                    <div class="p-3 bg-white rounded shadow-sm border">
+                        <div class="text-muted small text-uppercase fw-semibold">Attendance</div>
+                        <h3 class="fw-bold mb-0 {% if attendance_summary.percentage >= 75 %}text-success{% else %}text-danger{% endif %}">
+                            {{ attendance_summary.percentage }}%
+                        </h3>
+                        <small class="text-muted">
+                            {% if attendance_summary.percentage >= 75 %}
+                                <i class="bi bi-check-circle-fill text-success"></i> Good Standing
+                            {% else %}
+                                <i class="bi bi-exclamation-triangle-fill text-danger"></i> Shortage Alert
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="p-3 bg-white rounded shadow-sm border">
+                        <div class="text-muted small text-uppercase fw-semibold">Lectures Attended</div>
+                        <h3 class="fw-bold mb-0 text-primary">{{ attendance_summary.present }} <small class="fs-6 text-muted">/ {{ attendance_summary.total }}</small></h3>
+                        <small class="text-muted">Late: {{ attendance_summary.late }} &bull; Absent: {{ attendance_summary.absent }}</small>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="p-3 bg-white rounded shadow-sm border">
+                        <div class="text-muted small text-uppercase fw-semibold">Average Marks</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ student.average_marks }}%</h3>
+                        <small class="text-muted">{{ grades|length }} Subjects Evaluated</small>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="p-3 bg-white rounded shadow-sm border">
+                        <div class="text-muted small text-uppercase fw-semibold">Academic Status</div>
+                        <h3 class="fw-bold mb-0 text-success">Active</h3>
+                        <small class="text-muted">Enrolled: {{ student.enrollment_date|date:"M d, Y" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Grades Table -->
+        <div class="col-lg-7">
+            <div class="card bg-white shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-award-fill text-warning me-2"></i>Academic Grades &amp; Marks
+                    </h5>
+                    <a href="{% url 'export_report_card_pdf' student.pk %}" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-file-pdf me-1"></i> Export PDF
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if grades %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Code</th>
+                                        <th>Subject Name</th>
+                                        <th>Marks</th>
+                                        <th>Max</th>
+                                        <th>Grade</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for g in grades %}
+                                        <tr>
+                                            <td class="ps-3"><span class="badge bg-light text-dark border">{{ g.subject.code }}</span></td>
+                                            <td class="fw-semibold text-dark">{{ g.subject.name }}</td>
+                                            <td><strong>{{ g.marks_obtained }}</strong></td>
+                                            <td class="text-muted">{{ g.max_marks }}</td>
+                                            <td>
+                                                <span class="badge {% if g.grade_letter == 'A+' or g.grade_letter == 'A' %}bg-success{% elif g.grade_letter == 'F' %}bg-danger{% else %}bg-primary{% endif %}">
+                                                    {{ g.grade_letter }}
+                                                </span>
+                                            </td>
+                                            <td class="small text-muted">{{ g.remarks|default:"Satisfactory" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-journal-x fs-1 text-muted"></i>
+                            <p class="mt-2 mb-0">No exam grades have been recorded yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance History -->
+        <div class="col-lg-5">
+            <div class="card bg-white shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-clock-history text-primary me-2"></i>Recent Attendance Log
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if attendance_records %}
+                        <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="ps-3">Date</th>
+                                        <th>Subject</th>
+                                        <th class="text-end pe-3">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for att in attendance_records %}
+                                        <tr>
+                                            <td class="ps-3 small text-muted">{{ att.date|date:"M d, Y" }}</td>
+                                            <td class="small fw-semibold text-dark">{{ att.subject.code|default:"Lecture" }}</td>
+                                            <td class="text-end pe-3">
+                                                {% if att.status == 'Present' %}
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Present</span>
+                                                {% elif att.status == 'Late' %}
+                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Late</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Absent</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                            <p class="mt-2 mb-0">No attendance records logged yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="card bg-white shadow-sm border-0 text-center p-5">
+        <i class="bi bi-person-x text-muted" style="font-size: 3.5rem;"></i>
+        <h4 class="fw-bold text-dark mt-3">No Student Record Linked</h4>
+        <p class="text-muted">Your user account is not currently linked to an active student roll number. Please contact your academic administrator.</p>
+    </div>
+{% endif %}
+{% endblock %}

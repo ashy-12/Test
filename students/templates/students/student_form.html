@@ -1,0 +1,157 @@
+{% extends 'students/base.html' %}
+
+{% block title %}{{ title }} - Student Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Back Navigation -->
+        <div class="mb-3">
+            <a href="{% if student %}{% url 'student_detail' student.pk %}{% else %}{% url 'student_list' %}{% endif %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Cancel
+            </a>
+        </div>
+
+        <div class="card bg-white shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-3">
+                        <i class="bi bi-person-gear fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">{{ title }}</h5>
+                        <small class="text-muted">Fill out the student details below</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <!-- First Name & Last Name -->
+                        <div class="col-md-6">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold">
+                                First Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold">
+                                Last Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Roll Number & Email -->
+                        <div class="col-md-6">
+                            <label for="{{ form.roll_number.id_for_label }}" class="form-label fw-semibold">
+                                Roll Number / Student ID <span class="text-danger">*</span>
+                            </label>
+                            {{ form.roll_number }}
+                            {% if form.roll_number.errors %}
+                                <div class="text-danger small mt-1">{{ form.roll_number.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
+                                Email Address <span class="text-danger">*</span>
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Phone & Gender -->
+                        <div class="col-md-6">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label fw-semibold">
+                                Phone Number
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.gender.id_for_label }}" class="form-label fw-semibold">
+                                Gender <span class="text-danger">*</span>
+                            </label>
+                            {{ form.gender }}
+                            {% if form.gender.errors %}
+                                <div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Course & Enrollment Date -->
+                        <div class="col-md-6">
+                            <label for="{{ form.course.id_for_label }}" class="form-label fw-semibold">
+                                Course / Major <span class="text-danger">*</span>
+                            </label>
+                            {{ form.course }}
+                            {% if form.course.errors %}
+                                <div class="text-danger small mt-1">{{ form.course.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.enrollment_date.id_for_label }}" class="form-label fw-semibold">
+                                Enrollment Date <span class="text-danger">*</span>
+                            </label>
+                            {{ form.enrollment_date }}
+                            {% if form.enrollment_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.enrollment_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Date of Birth -->
+                        <div class="col-md-6">
+                            <label for="{{ form.date_of_birth.id_for_label }}" class="form-label fw-semibold">
+                                Date of Birth
+                            </label>
+                            {{ form.date_of_birth }}
+                            {% if form.date_of_birth.errors %}
+                                <div class="text-danger small mt-1">{{ form.date_of_birth.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Address -->
+                        <div class="col-12">
+                            <label for="{{ form.address.id_for_label }}" class="form-label fw-semibold">
+                                Residential Address
+                            </label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a href="{% if student %}{% url 'student_detail' student.pk %}{% else %}{% url 'student_list' %}{% endif %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i> {{ button_text|default:'Save' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
